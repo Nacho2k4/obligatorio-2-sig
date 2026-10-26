@@ -1,0 +1,25 @@
+{
+  "id": "mock-sig26-01",
+  "nombre": "Ruta de Prueba Dallas - Oklahoma - Wichita",
+  "creada": "2026-10-26",
+  "paradas": [
+    {
+      "eventId": 1,
+      "nombre": "Dallas, TX",
+      "tipo": 0,
+      "punto": { "x": -96.7970, "y": 32.7767 }
+    },
+    {
+      "eventId": 2,
+      "nombre": "Oklahoma City, OK",
+      "tipo": 1,
+      "punto": { "x": -97.5164, "y": 35.4676 }
+    },
+    {
+      "eventId": 3,
+      "nombre": "Wichita, KS",
+      "tipo": 3,
+      "punto": { "x": -97.3375, "y": 37.6872 }
+    }
+  ]
+}
