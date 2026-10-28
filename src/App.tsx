@@ -3,8 +3,16 @@ import Map from '@arcgis/core/Map';
 import MapView from '@arcgis/core/views/MapView';
 import TileLayer from '@arcgis/core/layers/TileLayer';
 
+import { probarGeocoding } from './modules/persona-a/services/geocodingService';
+import { probarRuteo } from './modules/persona-a/services/routingService';
+
 function App() {
   const mapRef = useRef<HTMLDivElement>(null);
+    
+  useEffect(() => {
+      probarGeocoding("Miami");
+      probarRuteo();
+  }, []);
 
   useEffect(() => {
     if (!mapRef.current) return;
