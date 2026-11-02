@@ -3,16 +3,10 @@ import Map from '@arcgis/core/Map';
 import MapView from '@arcgis/core/views/MapView';
 import TileLayer from '@arcgis/core/layers/TileLayer';
 
-import { probarGeocoding } from './modules/persona-a/services/geocodingService';
-import { probarRuteo } from './modules/persona-a/services/routingService';
+import { RoutePlanner } from './modules/persona-a/components/RoutePlanner';
 
 function App() {
   const mapRef = useRef<HTMLDivElement>(null);
-    
-  useEffect(() => {
-      probarGeocoding("Miami");
-      probarRuteo();
-  }, []);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -35,7 +29,17 @@ function App() {
     return () => view.destroy();
   }, []);
 
-  return <div ref={mapRef} style={{ width: '100%', height: '100vh' }} />;
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
+      {/* El panel flotando a la izquierda */}
+      <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 99 }}>
+        <RoutePlanner />
+      </div>
+      
+      {/* El mapa de fondo */}
+      <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+    </div>
+  );
 }
 
 export default App;

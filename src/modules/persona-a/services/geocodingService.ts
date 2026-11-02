@@ -10,20 +10,20 @@ export const probarGeocoding = async (busqueda: string) => {
       maxLocations: 5
     });
 
-    // Filtramos los datos para quedarnos solo con X e Y
     const coordenadas = resultados.flatMap(candidato =>
       candidato.location
         ? [{
+            address: candidato.address,
             x: candidato.location.x, // Longitud
             y: candidato.location.y  // Latitud
           }]
         : []
     );
 
-    console.log("📍 Coordenadas encontradas:", coordenadas);
+    console.log("Coordenadas encontradas:", coordenadas);
     
     return coordenadas;
   } catch (error) {
-    console.error("❌ Error en Geocodificación:", error);
+    console.error("Error en Geocodificación:", error);
   }
 };

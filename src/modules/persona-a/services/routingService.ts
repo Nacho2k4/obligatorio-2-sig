@@ -3,25 +3,38 @@ import RouteParameters from "@arcgis/core/rest/support/RouteParameters";
 import FeatureSet from "@arcgis/core/rest/support/FeatureSet";
 import Graphic from "@arcgis/core/Graphic";
 import Point from "@arcgis/core/geometry/Point";
+import type { EventoParada } from "../../../contracts/contracts";
 
 const ROUTE_URL = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
 
-export const probarRuteo = async () => {
+export const calcularRuta = async (paradas: EventoParada[]) => {
   try {
-    // Puntos de prueba en EE. UU. (Dallas y Oklahoma City)
-    const puntoA = new Graphic({ geometry: new Point({ x: -96.7970, y: 32.7767 }) });
-    const puntoB = new Graphic({ geometry: new Point({ x: -97.5164, y: 35.4676 }) });
-
-    const routeParams = new RouteParameters({
-      stops: new FeatureSet({ features: [puntoA, puntoB] }),
-      returnRoutes: true,
-      outSpatialReference: { wkid: 4326 }
+    // Convertir el arreglo de EventoParada a Graphics (Point) de ArcGIS
+    const stopsGraphics = paradas.map(parada => {
+      return new Graphic({
+        geometry: new Point({ 
+          x: parada.punto.x, 
+          y: parada.punto.y 
+        }),
+        attributes: {
+          Name: parada.nombre
+        }
+      });
     });
 
+    // Configurar los parámetros del servicio
+    const routeParams = new RouteParameters({
+      stops: new FeatureSet({ features: stopsGraphics }),
+      returnRoutes: true,
+      outSpatialReference: { wkid: 4326 } // Coordenadas WGS84 (Lat/Lon estándar)
+    });
+
+    // Ejecutar el cálculo en el servidor de Esri
     const resultado = await solve(ROUTE_URL, routeParams);
-    console.log("🛣️ Ruta calculada:", resultado.routeResults[0].route);
     return resultado.routeResults[0].route;
+    
   } catch (error) {
-    console.error("❌ Error en Ruteo:", error);
+    console.error("Error al calcular la ruta:", error);
+    alert("Ocurrió un error al calcular la ruta.");
   }
 };
