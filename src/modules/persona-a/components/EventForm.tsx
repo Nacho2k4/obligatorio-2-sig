@@ -42,12 +42,20 @@ export const EventForm = ({ onAgregarParada }: EventFormProps) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <style>{`
+            .input-personalizado::placeholder {
+            color: #c2c4c7; /* Cambia este código por el color que quieras (ej. Azul) */
+            opacity: 1;     /* Evita que se vea transparente en algunos navegadores */
+            }
+      `}</style>
+
       <input 
         type="text" 
+        className="input-personalizado" // <- Añadimos esta clase
         placeholder="Buscar ciudad o dirección (ej. Miami)" 
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
-        style={{ padding: '8px' }}
+        style={{ padding: '8px'}}
       />
       
       <select 
