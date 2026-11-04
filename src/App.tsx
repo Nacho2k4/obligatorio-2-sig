@@ -70,7 +70,6 @@ function App() {
     // Detectar clics en la vista del mapa
     view.on("click", (event) => {
       view.hitTest(event).then((response) => {
-        // Buscamos si el clic interceptó algún gráfico de nuestra capa
         const graphicHit = response.results.find(
           (r: any) => r.type === "graphic" && r.graphic.layer === graphicsLayer
         ) as __esri.GraphicHit;

@@ -9,7 +9,6 @@ const ROUTE_URL = "https://route-api.arcgis.com/arcgis/rest/services/World/Route
 
 export const calcularRuta = async (paradas: EventoParada[]) => {
   try {
-    // Convertir el arreglo de EventoParada a Graphics (Point) de ArcGIS
     const stopsGraphics = paradas.map(parada => {
       return new Graphic({
         geometry: new Point({ 
@@ -22,14 +21,12 @@ export const calcularRuta = async (paradas: EventoParada[]) => {
       });
     });
 
-    // Configurar los parámetros del servicio
     const routeParams = new RouteParameters({
       stops: new FeatureSet({ features: stopsGraphics }),
       returnRoutes: true,
       outSpatialReference: { wkid: 4326 } // Coordenadas WGS84 (Lat/Lon estándar)
     });
 
-    // Ejecutar el cálculo en el servidor de Esri
     const resultado = await solve(ROUTE_URL, routeParams);
     return resultado.routeResults[0].route;
     

@@ -51,7 +51,7 @@ export const EventForm = ({ onAgregarParada }: EventFormProps) => {
 
       <input 
         type="text" 
-        className="input-personalizado" // <- Añadimos esta clase
+        className="input-personalizado"
         placeholder="Buscar ciudad o dirección (ej. Miami)" 
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}

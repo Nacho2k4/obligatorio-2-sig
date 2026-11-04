@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { EventoParada, RutaGuardada } from '../../../contracts/contracts';
 import { calcularRuta } from '../services/routingService';
+import { exportarRutaArchivo } from '../services/routeFileService';
 import { guardarRuta } from '../repositories/routeRepository';
 
 const MAPA_TIPOS_EVENTO: Record<number, string> = {
@@ -17,6 +18,7 @@ interface EventListProps {
   paradaSeleccionada?: number | null; 
   onCentrarEnParada?: (parada: EventoParada) => void;
   onImprimirMapa?: () => Promise<void>;
+  onRutaGuardada?: () => void;
 }
 
 export const EventList = ({ 
@@ -27,7 +29,8 @@ export const EventList = ({
   onRutaCalculada, 
   paradaSeleccionada, 
   onCentrarEnParada,
-  onImprimirMapa
+  onImprimirMapa,
+  onRutaGuardada
 }: EventListProps) => {
   const [nombreRuta, setNombreRuta] = useState('Mi Ruta de Eventos');
   const [isPrinting, setIsPrinting] = useState(false);
@@ -41,18 +44,25 @@ export const EventList = ({
     }
   };
 
+  const construirRuta = (): RutaGuardada => ({
+    id: `ruta-${Date.now()}`,
+    nombre: nombreRuta.trim(),
+    paradas: [...paradas],
+    geometria: rutaCalculada.geometry,
+    creada: new Date().toISOString()
+  });
+
   const handleGuardarRuta = () => {
     if (!rutaCalculada || !nombreRuta.trim()) return alert("Ingresa un nombre válido.");
     
-    const nuevaRuta: RutaGuardada = {
-      id: `ruta-${Date.now()}`,
-      nombre: nombreRuta.trim(),
-      paradas: [...paradas],
-      geometria: rutaCalculada.geometry,
-      creada: new Date().toISOString()
-    };
-    guardarRuta(nuevaRuta);
+    guardarRuta(construirRuta());
+    if (onRutaGuardada) onRutaGuardada();
     alert("¡Ruta guardada correctamente!");
+  };
+
+  const handleExportarArchivo = () => {
+    if (!rutaCalculada || !nombreRuta.trim()) return alert("Ingresa un nombre válido.");
+    exportarRutaArchivo(construirRuta());
   };
 
   const handleImprimir = async () => {
@@ -178,6 +188,13 @@ export const EventList = ({
               {isPrinting ? 'Exportando...' : 'Exportar PDF'}
             </button>
           </div>
+
+          <button 
+            onClick={handleExportarArchivo} 
+            style={{ padding: '8px', backgroundColor: '#13a8a8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            Exportar archivo (.json)
+          </button>
         </div>
       )}
     </div>
