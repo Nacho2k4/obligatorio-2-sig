@@ -15,6 +15,6 @@ export interface RutaGuardada {
   id: string;
   nombre: string;
   paradas: EventoParada[];
-  geometria?: Polyline;
+  geometria: Polyline; // wgs84, obligatoria porque la simulación recorre esta polilínea
   creada: string;
 }
