@@ -1,33 +1,38 @@
-import { useEffect, useRef } from 'react';
-import Map from '@arcgis/core/Map';
-import MapView from '@arcgis/core/views/MapView';
-import TileLayer from '@arcgis/core/layers/TileLayer';
+import "@esri/calcite-components/components/calcite-shell";
+import "@esri/calcite-components/components/calcite-shell-panel";
+import "@esri/calcite-components/components/calcite-panel";
+import "@esri/calcite-components/components/calcite-tabs";
+import "@esri/calcite-components/components/calcite-tab-nav";
+import "@esri/calcite-components/components/calcite-tab-title";
+import "@esri/calcite-components/components/calcite-tab";
+import "@esri/calcite-components/components/calcite-notice";
+import "@esri/calcite-components/components/calcite-button";
+import { MapaPrincipal } from "./shared/map/MapaPrincipal";
+import { RutasPanel } from "./modules/persona-a/components/RutasPanel";
+import { SimulacionPanel } from "./modules/persona-b/components/SimulacionPanel";
 
-function App() {
-  const mapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    const tiledLayer = new TileLayer({
-      url: "http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer"
-    });
-
-    const map = new Map({
-      layers: [tiledLayer]
-    });
-
-    const view = new MapView({
-      container: mapRef.current,
-      map: map,
-      center: [-98.5795, 39.8283], // Centro de EE. UU.
-      zoom: 4
-    });
-
-    return () => view.destroy();
-  }, []);
-
-  return <div ref={mapRef} style={{ width: '100%', height: '100vh' }} />;
+export function App() {
+  return (
+    <calcite-shell>
+      <calcite-shell-panel slot="panel-start" position="start" width="l" resizable>
+        <calcite-panel heading="SIG — Obligatorio 2" description="Simulación de móvil sobre rutas de EE. UU.">
+          <calcite-tabs layout="center" bordered>
+            <calcite-tab-nav slot="title-group">
+              <calcite-tab-title iconStart="road-sign" selected>
+                Rutas
+              </calcite-tab-title>
+              <calcite-tab-title iconStart="car">Simulación</calcite-tab-title>
+            </calcite-tab-nav>
+            <calcite-tab selected>
+              <RutasPanel />
+            </calcite-tab>
+            <calcite-tab>
+              <SimulacionPanel />
+            </calcite-tab>
+          </calcite-tabs>
+        </calcite-panel>
+      </calcite-shell-panel>
+      <MapaPrincipal />
+    </calcite-shell>
+  );
 }
-
-export default App;

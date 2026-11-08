@@ -1,14 +1,15 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import esriConfig from '@arcgis/core/config';
-import App from './App';
-import './index.css';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import esriConfig from "@arcgis/core/config.js";
+import { ARCGIS_API_KEY } from "./shared/config";
+import { App } from "./App";
+import "./index.css";
 
-// Cargar la API Key de las variables de entorno
-esriConfig.apiKey = import.meta.env.VITE_ARCGIS_API_KEY || '';
+// la api key tiene que estar seteada antes del primer request
+if (ARCGIS_API_KEY) esriConfig.apiKey = ARCGIS_API_KEY;
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>
+  </StrictMode>,
 );
