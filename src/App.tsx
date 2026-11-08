@@ -8,7 +8,6 @@ import "@esri/calcite-components/components/calcite-tab";
 import "@esri/calcite-components/components/calcite-notice";
 import "@esri/calcite-components/components/calcite-button";
 import { MapaPrincipal } from "./shared/map/MapaPrincipal";
-import { EventosPanel } from "./modules/persona-a/components/EventosPanel";
 import { RutasPanel } from "./modules/persona-a/components/RutasPanel";
 import { SimulacionPanel } from "./modules/persona-b/components/SimulacionPanel";
 
@@ -19,19 +18,15 @@ export function App() {
         <calcite-panel heading="SIG — Obligatorio 2" description="Simulación de móvil sobre rutas de EE. UU.">
           <calcite-tabs layout="center" bordered>
             <calcite-tab-nav slot="title-group">
-              <calcite-tab-title iconStart="calendar">Eventos</calcite-tab-title>
-              <calcite-tab-title iconStart="road-sign">Rutas</calcite-tab-title>
-              <calcite-tab-title iconStart="car" selected>
-                Simulación
+              <calcite-tab-title iconStart="road-sign" selected>
+                Rutas
               </calcite-tab-title>
+              <calcite-tab-title iconStart="car">Simulación</calcite-tab-title>
             </calcite-tab-nav>
-            <calcite-tab>
-              <EventosPanel />
-            </calcite-tab>
-            <calcite-tab>
+            <calcite-tab selected>
               <RutasPanel />
             </calcite-tab>
-            <calcite-tab selected>
+            <calcite-tab>
               <SimulacionPanel />
             </calcite-tab>
           </calcite-tabs>

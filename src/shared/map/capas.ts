@@ -12,7 +12,7 @@ export const capas = {
   ruta: new GraphicsLayer({ id: "ruta", title: "Ruta" }),
   estados: new GraphicsLayer({ id: "estados", title: "Recorrido por Estado" }),
   velocidad: new GraphicsLayer({ id: "velocidad", title: "Recorrido por velocidad" }),
-  eventos: new GraphicsLayer({ id: "eventos", title: "Eventos" }),
+  eventos: new GraphicsLayer({ id: "eventos", title: "Planificación (paradas y ruta)" }),
   movil: new GraphicsLayer({ id: "movil", title: "Móvil" }),
 } as const;
 

@@ -30,7 +30,6 @@ src/
   modules/
     persona-a/             # eventos (geocoding, ABM) y rutas (ruteo, guardado, PDF)
     persona-b/             # simulación, simbología y análisis espacial
-docs/
 ```
 
 ### Integración entre módulos
