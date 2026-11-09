@@ -9,10 +9,10 @@ import { SERVICIOS } from "../config";
 export const capas = {
   condados: new GraphicsLayer({ id: "condados", title: "Condados interceptados" }),
   buffer: new GraphicsLayer({ id: "buffer", title: "Buffer" }),
+  eventos: new GraphicsLayer({ id: "eventos", title: "Planificación (paradas y ruta)" }),
   ruta: new GraphicsLayer({ id: "ruta", title: "Ruta" }),
   estados: new GraphicsLayer({ id: "estados", title: "Recorrido por Estado" }),
   velocidad: new GraphicsLayer({ id: "velocidad", title: "Recorrido por velocidad" }),
-  eventos: new GraphicsLayer({ id: "eventos", title: "Planificación (paradas y ruta)" }),
   movil: new GraphicsLayer({ id: "movil", title: "Móvil" }),
 } as const;
 

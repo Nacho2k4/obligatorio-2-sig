@@ -10,6 +10,8 @@ import "@esri/calcite-components/components/calcite-button";
 import { MapaPrincipal } from "./shared/map/MapaPrincipal";
 import { RutasPanel } from "./modules/persona-a/components/RutasPanel";
 import { SimulacionPanel } from "./modules/persona-b/components/SimulacionPanel";
+import { AvisoCambioEstado } from "./modules/persona-b/components/AvisoCambioEstado";
+import { LeyendaSimulacion } from "./modules/persona-b/components/LeyendaSimulacion";
 
 export function App() {
   return (
@@ -32,7 +34,10 @@ export function App() {
           </calcite-tabs>
         </calcite-panel>
       </calcite-shell-panel>
-      <MapaPrincipal />
+      <MapaPrincipal>
+        <LeyendaSimulacion />
+      </MapaPrincipal>
+      <AvisoCambioEstado />
     </calcite-shell>
   );
 }
