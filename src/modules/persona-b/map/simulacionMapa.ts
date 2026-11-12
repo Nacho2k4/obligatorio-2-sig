@@ -1,4 +1,5 @@
 import Graphic from "@arcgis/core/Graphic.js";
+import Camera from "@arcgis/core/Camera.js";
 import PopupTemplate from "@arcgis/core/PopupTemplate.js";
 import Point from "@arcgis/core/geometry/Point.js";
 import type Polygon from "@arcgis/core/geometry/Polygon.js";
@@ -8,7 +9,7 @@ import { capas } from "../../../shared/map/capas";
 import { obtenerVista } from "../../../shared/map/vista";
 import type { Condado } from "../services/CountyQueryService";
 import type { PoblacionCondado } from "../services/PopulationCalculator";
-import { subRecorrido, type Coordenada, type Recorrido } from "../services/Recorrido";
+import { desplazar, subRecorrido, type Coordenada, type Recorrido } from "../services/Recorrido";
 import type { LecturaGps } from "../services/SimulationEngine";
 import type { CambioEstado, TramoEstado } from "../services/StateTracker";
 import {
@@ -158,6 +159,43 @@ export function resaltarCondado(objectId: number | null): void {
 export function enfocarCondado(objectId: number): void {
   const extent = graficosCondado.get(objectId)?.geometry?.extent;
   if (extent) obtenerVista()?.goTo(extent.clone().expand(1.4)).catch(() => {});
+}
+
+// cámara de seguimiento: en 3d se ubica detrás del móvil mirando hacia donde avanza; en 2d solo centra
+const ALTURA_MIN_CAMARA_M = 3500;
+const ALTURA_MAX_CAMARA_M = 20000;
+const INCLINACION_SEGUIMIENTO = 65;
+const ZOOM_SEGUIMIENTO_2D = 11;
+
+// a más km por tick más alta la cámara, para que el salto del móvil entre ticks sea chico en pantalla
+export const alturaCamaraM = (avanceKmPorTick: number) =>
+  Math.min(Math.max(avanceKmPorTick * 1000, ALTURA_MIN_CAMARA_M), ALTURA_MAX_CAMARA_M);
+
+export function seguirConCamara(
+  [x, y]: Coordenada,
+  rumbo: number,
+  duracionMs: number,
+  avanceKmPorTick: number,
+  inicial = false,
+): void {
+  const vista = obtenerVista();
+  if (!vista) return;
+  const opciones = inicial ? { duration: 1500 } : { duration: duracionMs, easing: "linear" as const };
+
+  if (vista.type === "3d") {
+    // a esa altura y con esa inclinación, el móvil queda en el centro si la cámara está h·tan(tilt) más atrás
+    const altura = alturaCamaraM(avanceKmPorTick);
+    const atrasKm = (altura / 1000) * Math.tan((INCLINACION_SEGUIMIENTO * Math.PI) / 180);
+    const [cx, cy] = desplazar([x, y], atrasKm, (rumbo + 180) % 360);
+    const camara = new Camera({
+      position: { x: cx, y: cy, z: altura, spatialReference: WGS84 },
+      heading: rumbo,
+      tilt: INCLINACION_SEGUIMIENTO,
+    });
+    vista.goTo(camara, opciones).catch(() => {});
+  } else {
+    vista.goTo(inicial ? { center: [x, y], zoom: ZOOM_SEGUIMIENTO_2D } : { center: [x, y] }, opciones).catch(() => {});
+  }
 }
 
 export function limpiarAnalisis(): void {

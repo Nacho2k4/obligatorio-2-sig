@@ -39,19 +39,38 @@ export function colorEstado(indice: number): string {
   return PALETA_ESTADOS[indice % PALETA_ESTADOS.length];
 }
 
+// en 3d cada instancia de símbolo nueva genera su ícono de forma asíncrona y el gráfico desaparece
+// medio segundo o más; los símbolos que cambian seguido se reutilizan (no hay que mutarlos)
+function memo<K, V>(crear: (clave: K) => V): (clave: K) => V {
+  const cache = new Map<K, V>();
+  return (clave) => {
+    let valor = cache.get(clave);
+    if (valor === undefined) {
+      valor = crear(clave);
+      cache.set(clave, valor);
+    }
+    return valor;
+  };
+}
+
 export const simboloRuta = () => new SimpleLineSymbol({ color: COLOR_RUTA, width: 3 });
 
 export const simboloParada = () =>
   new SimpleMarkerSymbol({ style: "circle", color: [40, 40, 40], size: 10, outline: { color: "white", width: 2 } });
 
-export const simboloTramoVelocidad = (clase: number) =>
-  new SimpleLineSymbol({ color: CLASES_VELOCIDAD[clase].color, width: 5, cap: "round", join: "round" });
+export const simboloTramoVelocidad = memo(
+  (clase: number) => new SimpleLineSymbol({ color: CLASES_VELOCIDAD[clase].color, width: 5, cap: "round", join: "round" }),
+);
 
 export const simboloTramoEstado = (indice: number) =>
   new SimpleLineSymbol({ color: colorEstado(indice), width: 14, cap: "butt", join: "round" });
 
-export const simboloMovil = (kmh: number) =>
-  new SimpleMarkerSymbol({ style: "circle", color: colorVelocidad(kmh), size: 18, outline: { color: "white", width: 3 } });
+const simboloMovilPorClase = memo(
+  (clase: number) =>
+    new SimpleMarkerSymbol({ style: "circle", color: CLASES_VELOCIDAD[clase].color, size: 18, outline: { color: "white", width: 3 } }),
+);
+
+export const simboloMovil = (kmh: number) => simboloMovilPorClase(claseVelocidad(kmh));
 
 export const simboloCruce = (indice: number) =>
   new SimpleMarkerSymbol({ style: "diamond", color: colorEstado(indice), size: 18, outline: { color: "white", width: 2 } });
@@ -73,8 +92,12 @@ export const simboloBuffer = () =>
     outline: { color: COLOR_BUFFER, width: 2, style: "dash" },
   });
 
-export const simboloCondado = (resaltado = false) =>
-  new SimpleFillSymbol({
-    color: [216, 27, 96, resaltado ? 0.35 : 0.1],
-    outline: { color: COLOR_CONDADO, width: resaltado ? 3 : 1.5 },
-  });
+const simboloCondadoSegun = memo(
+  (resaltado: boolean) =>
+    new SimpleFillSymbol({
+      color: [216, 27, 96, resaltado ? 0.35 : 0.1],
+      outline: { color: COLOR_CONDADO, width: resaltado ? 3 : 1.5 },
+    }),
+);
+
+export const simboloCondado = (resaltado = false) => simboloCondadoSegun(resaltado);

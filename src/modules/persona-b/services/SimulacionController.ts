@@ -1,5 +1,6 @@
 import type { RutaGuardada } from "../../../contracts/contracts";
 import { SERVICIOS } from "../../../shared/config";
+import { alCambiarVista } from "../../../shared/map/vista";
 import { useAppStore } from "../../../shared/store";
 import {
   dibujarAvance,
@@ -14,6 +15,7 @@ import {
   mostrarRuta,
   moverMovil,
   resaltarCondado,
+  seguirConCamara,
 } from "../map/simulacionMapa";
 import { ESTADO_RECORRIDO_INICIAL, useSimulacionStore } from "../simulacionStore";
 import { AnalysisPipeline } from "./AnalysisPipeline";
@@ -22,7 +24,7 @@ import { consultarEstadoEnPunto } from "./consultarEstado";
 import { CountyQueryService } from "./CountyQueryService";
 import { densificarRuta } from "./densificarRuta";
 import { crearPopulationCalculator } from "./poblacionGeometryServer";
-import { crearRecorrido, posicionEn, subRecorrido, ubicarParadas, type Recorrido } from "./Recorrido";
+import { crearRecorrido, posicionEn, rumboEn, subRecorrido, ubicarParadas, type Recorrido } from "./Recorrido";
 import { SimulationEngine, type LecturaGps } from "./SimulationEngine";
 import { SpeedProfile } from "./SpeedProfile";
 import { StateTracker } from "./StateTracker";
@@ -104,6 +106,39 @@ function manejarLectura(lectura: LecturaGps): void {
   ultimoKm = lectura.distanciaKm;
   void tracker?.actualizar(lectura.distanciaKm);
   analizar(lectura.distanciaKm);
+  seguir(false);
+}
+
+// la cámara apunta medio tick adelante: el móvil salta un tick por vez y así queda alrededor del centro
+function seguir(inicial: boolean): void {
+  const { seguirMovil, intervaloMs, escalaTiempo, lectura } = useSimulacionStore.getState();
+  if (!seguirMovil || !preparado) return;
+  const avanceKm = ((lectura?.velocidadKmh ?? 0) * (intervaloMs / 1000) * escalaTiempo) / 3600;
+  const objetivoKm = Math.min(ultimoKm + (inicial ? 0 : avanceKm / 2), preparado.recorrido.totalKm);
+  seguirConCamara(
+    posicionEn(preparado.recorrido, objetivoKm),
+    rumboEn(preparado.recorrido, objetivoKm),
+    intervaloMs,
+    avanceKm,
+    inicial,
+  );
+}
+
+// si el usuario mueve el mapa a mano se apaga el seguimiento, para no pelearle la cámara
+function apagarSeguimientoAlInteractuar(): () => void {
+  let handles: { remove(): void }[] = [];
+  const apagar = () => {
+    if (useSimulacionStore.getState().seguirMovil) useSimulacionStore.setState({ seguirMovil: false });
+  };
+  const desuscribir = alCambiarVista((vista) => {
+    handles.forEach((h) => h.remove());
+    handles = vista ? [vista.on("drag", apagar), vista.on("mouse-wheel", apagar)] : [];
+    seguir(true);
+  });
+  return () => {
+    desuscribir();
+    handles.forEach((h) => h.remove());
+  };
 }
 
 function crearMotor(): void {
@@ -156,8 +191,10 @@ export function iniciarSimulacion(): () => void {
   const desuscribir = useAppStore.subscribe((estado, previo) => {
     if (estado.rutaActiva !== previo.rutaActiva) void prepararRuta(estado.rutaActiva);
   });
+  const quitarInteraccion = apagarSeguimientoAlInteractuar();
   return () => {
     desuscribir();
+    quitarInteraccion();
     version++;
     motor?.destruir();
     tracker?.reset();
@@ -184,6 +221,10 @@ export const controles = {
   setIntervaloMs(ms: number) {
     useSimulacionStore.setState({ intervaloMs: ms });
     motor?.setIntervaloMs(ms);
+  },
+  setSeguirMovil(seguirMovil: boolean) {
+    useSimulacionStore.setState({ seguirMovil });
+    seguir(true);
   },
   // el análisis en vuelo usa el radio viejo, así que se descarta y se rehace en la posición actual
   setRadioBufferKm(radioKm: number) {

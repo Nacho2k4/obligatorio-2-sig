@@ -79,3 +79,27 @@ export function subRecorrido(recorrido: Recorrido, desdeKm: number, hastaKm: num
   puntos.push(posicionEn(recorrido, b));
   return puntos;
 }
+
+// rumbo inicial de a hacia b, en grados desde el norte en sentido horario (0..360)
+export function rumboGrados([lon1, lat1]: Coordenada, [lon2, lat2]: Coordenada): number {
+  const dLon = rad(lon2 - lon1);
+  const y = Math.sin(dLon) * Math.cos(rad(lat2));
+  const x = Math.cos(rad(lat1)) * Math.sin(rad(lat2)) - Math.sin(rad(lat1)) * Math.cos(rad(lat2)) * Math.cos(dLon);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
+
+// punto al que se llega saliendo de origen con ese rumbo y esa distancia, sobre la esfera
+export function desplazar([lon, lat]: Coordenada, distancia: number, rumbo: number): Coordenada {
+  const d = distancia / RADIO_TIERRA_KM;
+  const r = rad(rumbo);
+  const lat1 = rad(lat);
+  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(r));
+  const lon2 = rad(lon) + Math.atan2(Math.sin(r) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2));
+  return [(lon2 * 180) / Math.PI, (lat2 * 180) / Math.PI];
+}
+
+// rumbo del recorrido en un km, mirando un tramo hacia atrás para que no tiemble entre vértices
+export function rumboEn(recorrido: Recorrido, km: number, ventanaKm = 1): number {
+  const desde = Math.max(0, Math.min(km - ventanaKm, recorrido.totalKm - ventanaKm));
+  return rumboGrados(posicionEn(recorrido, desde), posicionEn(recorrido, Math.max(km, desde + ventanaKm)));
+}

@@ -3,6 +3,7 @@ import "@esri/calcite-components/components/calcite-label";
 import "@esri/calcite-components/components/calcite-progress";
 import "@esri/calcite-components/components/calcite-segmented-control";
 import "@esri/calcite-components/components/calcite-segmented-control-item";
+import "@esri/calcite-components/components/calcite-switch";
 import { controles } from "../services/SimulacionController";
 import { useSimulacionStore } from "../simulacionStore";
 
@@ -12,6 +13,7 @@ export function ControlesSimulacion() {
   const lectura = useSimulacionStore((s) => s.lectura);
   const preparando = useSimulacionStore((s) => s.preparando);
   const escalaTiempo = useSimulacionStore((s) => s.escalaTiempo);
+  const seguirMovil = useSimulacionStore((s) => s.seguirMovil);
 
   const estado = lectura?.estado ?? "detenido";
   const listo = !!lectura && !preparando;
@@ -55,6 +57,16 @@ export function ControlesSimulacion() {
             </calcite-segmented-control-item>
           ))}
         </calcite-segmented-control>
+      </calcite-label>
+
+      <calcite-label layout="inline" scale="s">
+        <calcite-switch
+          checked={seguirMovil}
+          disabled={!listo}
+          scale="s"
+          oncalciteSwitchChange={(e) => controles.setSeguirMovil(e.target.checked)}
+        />
+        Seguir al móvil con la cámara (en 3D va detrás, mirando hacia donde avanza)
       </calcite-label>
     </>
   );

@@ -26,6 +26,7 @@ interface SimulacionState {
   ultimoCambio: (CambioEstado & { id: number }) | null;
   avisoEstado: string | null;
   radioBufferKm: number;
+  seguirMovil: boolean;
   analisis: AnalisisVigente | null;
   metricasAnalisis: MetricasAnalisis | null;
   avisoAnalisis: string | null;
@@ -49,5 +50,6 @@ export const useSimulacionStore = create<SimulacionState>()(() => ({
   intervaloMs: 1000,
   semilla: OPCIONES_PERFIL_DEFAULT.semilla,
   radioBufferKm: RADIO_BUFFER_DEFAULT_KM,
+  seguirMovil: false,
   ...ESTADO_RECORRIDO_INICIAL,
 }));

@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { crearRecorrido, distanciaKm, posicionEn, subRecorrido, ubicarParadas, type Coordenada } from "../services/Recorrido";
+import {
+  crearRecorrido,
+  desplazar,
+  distanciaKm,
+  posicionEn,
+  rumboEn,
+  rumboGrados,
+  subRecorrido,
+  ubicarParadas,
+  type Coordenada,
+} from "../services/Recorrido";
 import type { EventoParada } from "../../../contracts/contracts";
 
 // sobre el ecuador un grado de longitud mide ~111.2 km
@@ -49,5 +59,26 @@ describe("Recorrido", () => {
     expect(tramo[1]).toEqual([1, 0]);
     expect(tramo[2][0]).toBeCloseTo(1.5, 6);
     expect(subRecorrido(r, 10, 20)).toHaveLength(2);
+  });
+
+  it("calcula el rumbo en grados desde el norte", () => {
+    expect(rumboGrados([0, 0], [0, 1])).toBeCloseTo(0);
+    expect(rumboGrados([0, 0], [1, 0])).toBeCloseTo(90);
+    expect(rumboGrados([0, 1], [0, 0])).toBeCloseTo(180);
+    expect(rumboGrados([0, 0], [-1, 0])).toBeCloseTo(270);
+  });
+
+  it("desplazar es consistente con la distancia y el rumbo", () => {
+    const origen: Coordenada = [-97.5, 35.5];
+    const destino = desplazar(origen, 7, 225);
+    expect(distanciaKm(origen, destino)).toBeCloseTo(7, 6);
+    expect(rumboGrados(origen, destino)).toBeCloseTo(225, 1);
+  });
+
+  it("el rumbo del recorrido sigue la dirección de avance, también al principio y al final", () => {
+    const r = crearRecorrido(ECUADOR);
+    expect(rumboEn(r, 0)).toBeCloseTo(90);
+    expect(rumboEn(r, 150)).toBeCloseTo(90);
+    expect(rumboEn(r, r.totalKm)).toBeCloseTo(90);
   });
 });
