@@ -2,8 +2,10 @@ import * as print from "@arcgis/core/rest/print";
 import PrintTemplate from "@arcgis/core/rest/support/PrintTemplate";
 import PrintParameters from "@arcgis/core/rest/support/PrintParameters";
 import MapView from "@arcgis/core/views/MapView";
+import { SERVICIOS } from "../../../shared/config";
 
-const PRINT_SERVICE_URL = "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task";
+// servicio de impresión que indica la letra (sampleserver5)
+const PRINT_SERVICE_URL = `${SERVICIOS.printing}/Export%20Web%20Map%20Task`;
 
 export const exportarRutaPdf = async (view: MapView, titulo: string = "Mapa de Ruta") => {
   try {

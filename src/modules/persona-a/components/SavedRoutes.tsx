@@ -1,13 +1,20 @@
 import { useRef, useState } from 'react';
 import type { RutaGuardada } from '../../../contracts/contracts';
-import { exportarRutaArchivo, leerRutaDesdeArchivo } from '../services/routeFileService';
+import type { ResumenRuta } from '../repositories/routeRepository';
+import { leerRutaDesdeArchivo } from '../services/routeFileService';
 
 interface SavedRoutesProps {
-  rutas: RutaGuardada[];
-  onCargar: (ruta: RutaGuardada) => void;
+  rutas: ResumenRuta[];
+  cargando: boolean;
+  error: string | null;
+  onActualizar: () => void;
+  onCargar: (ruta: ResumenRuta) => Promise<void>;
+  onExportar: (ruta: ResumenRuta) => Promise<void>;
   onImportar: (ruta: RutaGuardada) => void;
-  onEliminar: (id: string) => void;
+  onEliminar: (ruta: ResumenRuta) => Promise<void>;
 }
+
+type Accion = 'cargar' | 'exportar' | 'eliminar';
 
 const estiloBoton = (activo: boolean, color: string): React.CSSProperties => ({
   flex: 1,
@@ -20,27 +27,35 @@ const estiloBoton = (activo: boolean, color: string): React.CSSProperties => ({
   fontWeight: 'bold'
 });
 
-export const SavedRoutes = ({ rutas, onCargar, onImportar, onEliminar }: SavedRoutesProps) => {
+export const SavedRoutes = ({ rutas, cargando, error, onActualizar, onCargar, onExportar, onImportar, onEliminar }: SavedRoutesProps) => {
   const [seleccionId, setSeleccionId] = useState('');
+  const [enCurso, setEnCurso] = useState<Accion | null>(null);
+  const [mensaje, setMensaje] = useState<string | null>(null);
   const inputArchivoRef = useRef<HTMLInputElement>(null);
 
-  const ordenadas = [...rutas].reverse();
-  const rutaSeleccionada = rutas.find((r) => r.id === seleccionId);
+  const rutaSeleccionada = rutas.find((r) => String(r.objectId) === seleccionId);
+  const habilitado = !!rutaSeleccionada && enCurso === null;
 
-  const handleCargar = () => {
-    if (rutaSeleccionada) onCargar(rutaSeleccionada);
-  };
-
-  const handleExportar = () => {
-    if (rutaSeleccionada) exportarRutaArchivo(rutaSeleccionada);
+  const ejecutar = async (accion: Accion, tarea: (ruta: ResumenRuta) => Promise<void>) => {
+    if (!rutaSeleccionada) return;
+    setEnCurso(accion);
+    setMensaje(null);
+    try {
+      await tarea(rutaSeleccionada);
+    } catch (e) {
+      setMensaje(e instanceof Error ? e.message : 'No se pudo completar la operación.');
+    } finally {
+      setEnCurso(null);
+    }
   };
 
   const handleEliminar = () => {
     if (!rutaSeleccionada) return;
-    if (!window.confirm(`¿Eliminar la ruta "${rutaSeleccionada.nombre}"? Esta acción no se puede deshacer.`)) return;
-
-    onEliminar(rutaSeleccionada.id);
-    setSeleccionId('');
+    if (!window.confirm(`¿Eliminar la ruta "${rutaSeleccionada.nombre}" del servidor? Esta acción no se puede deshacer. Los eventos de sus paradas se conservan.`)) return;
+    void ejecutar('eliminar', async (ruta) => {
+      await onEliminar(ruta);
+      setSeleccionId('');
+    });
   };
 
   const handleArchivoElegido = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,41 +73,53 @@ export const SavedRoutes = ({ rutas, onCargar, onImportar, onEliminar }: SavedRo
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      {rutas.length === 0 ? (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '12px', color: '#718096' }}>Rutas guardadas en el servidor (FeatureServer Trails)</span>
+        <button onClick={onActualizar} disabled={cargando} style={{ padding: '4px 8px', cursor: 'pointer', fontSize: '12px' }}>
+          {cargando ? 'Cargando...' : 'Actualizar lista'}
+        </button>
+      </div>
+
+      {error && <p style={{ fontSize: '12px', color: '#c53030', margin: 0 }}>{error}</p>}
+
+      {!cargando && !error && rutas.length === 0 ? (
         <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Todavía no hay rutas guardadas.</p>
       ) : (
         <>
           <select
             value={seleccionId}
             onChange={(e) => setSeleccionId(e.target.value)}
+            disabled={cargando}
             style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: '#fff', color: '#2d3748' }}
           >
-            <option value="">Elegí una ruta...</option>
-            {ordenadas.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.nombre} ({r.paradas.length} paradas · {new Date(r.creada).toLocaleDateString()})
+            <option value="">{cargando ? 'Cargando rutas...' : 'Elegí una ruta...'}</option>
+            {rutas.map((r) => (
+              <option key={r.objectId} value={String(r.objectId)}>
+                {r.nombre} ({r.cantidadParadas} paradas · {new Date(r.creada).toLocaleDateString()})
               </option>
             ))}
           </select>
 
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={handleCargar} disabled={!rutaSeleccionada} style={estiloBoton(!!rutaSeleccionada, '#fa8c16')}>
-              Cargar ruta
+            <button onClick={() => void ejecutar('cargar', onCargar)} disabled={!habilitado} style={estiloBoton(habilitado, '#fa8c16')}>
+              {enCurso === 'cargar' ? 'Cargando...' : 'Cargar ruta'}
             </button>
-            <button onClick={handleExportar} disabled={!rutaSeleccionada} style={estiloBoton(!!rutaSeleccionada, '#13a8a8')}>
-              Exportar archivo
+            <button onClick={() => void ejecutar('exportar', onExportar)} disabled={!habilitado} style={estiloBoton(habilitado, '#13a8a8')}>
+              {enCurso === 'exportar' ? 'Exportando...' : 'Exportar archivo'}
             </button>
           </div>
 
           <button
             onClick={handleEliminar}
-            disabled={!rutaSeleccionada}
-            style={{ ...estiloBoton(!!rutaSeleccionada, '#ff4d4f'), flex: 'none' }}
+            disabled={!habilitado}
+            style={{ ...estiloBoton(habilitado, '#ff4d4f'), flex: 'none' }}
           >
-            Eliminar ruta
+            {enCurso === 'eliminar' ? 'Eliminando...' : 'Eliminar ruta'}
           </button>
         </>
       )}
+
+      {mensaje && <p style={{ fontSize: '12px', color: '#c53030', margin: 0 }}>{mensaje}</p>}
 
       <hr style={{ margin: '6px 0', border: '1px solid #ddd', width: '100%' }} />
 
@@ -109,6 +136,9 @@ export const SavedRoutes = ({ rutas, onCargar, onImportar, onEliminar }: SavedRo
       >
         Importar desde archivo
       </button>
+      <p style={{ fontSize: '12px', color: '#718096', margin: 0 }}>
+        La ruta importada se abre en el planificador; apretá "Guardar" para subirla al servidor.
+      </p>
     </div>
   );
 };
