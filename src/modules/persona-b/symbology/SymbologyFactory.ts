@@ -1,3 +1,4 @@
+import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol.js";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol.js";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol.js";
 import TextSymbol from "@arcgis/core/symbols/TextSymbol.js";
@@ -21,6 +22,10 @@ export const CLASES_VELOCIDAD: ClaseVelocidad[] = [
 export const PALETA_ESTADOS = ["#6a3d9a", "#1f78b4", "#8c510a"];
 
 export const COLOR_RUTA = "#6e6e6e";
+
+// el análisis usa cian y magenta para no chocar con la rampa de velocidad ni con la paleta de estados
+export const COLOR_BUFFER = "#0097a7";
+export const COLOR_CONDADO = "#d81b60";
 
 export function claseVelocidad(kmh: number): number {
   return CLASES_VELOCIDAD.findIndex((c) => kmh < c.hastaKmh);
@@ -60,4 +65,16 @@ export const simboloEtiquetaCruce = (texto: string) =>
     xoffset: 14,
     horizontalAlignment: "left",
     font: { size: 11, weight: "bold" },
+  });
+
+export const simboloBuffer = () =>
+  new SimpleFillSymbol({
+    color: [0, 151, 167, 0.18],
+    outline: { color: COLOR_BUFFER, width: 2, style: "dash" },
+  });
+
+export const simboloCondado = (resaltado = false) =>
+  new SimpleFillSymbol({
+    color: [216, 27, 96, resaltado ? 0.35 : 0.1],
+    outline: { color: COLOR_CONDADO, width: resaltado ? 3 : 1.5 },
   });

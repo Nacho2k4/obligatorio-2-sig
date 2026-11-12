@@ -1,17 +1,27 @@
 import type { RutaGuardada } from "../../../contracts/contracts";
+import { SERVICIOS } from "../../../shared/config";
 import { useAppStore } from "../../../shared/store";
 import {
   dibujarAvance,
+  dibujarBuffer,
+  dibujarCondados,
+  enfocarCondado,
+  limpiarAnalisis,
   dibujarTramosEstado,
   limpiarRecorrido,
   limpiarSimulacion,
   marcarCruce,
   mostrarRuta,
   moverMovil,
+  resaltarCondado,
 } from "../map/simulacionMapa";
 import { ESTADO_RECORRIDO_INICIAL, useSimulacionStore } from "../simulacionStore";
+import { AnalysisPipeline } from "./AnalysisPipeline";
+import { BufferService } from "./BufferService";
 import { consultarEstadoEnPunto } from "./consultarEstado";
+import { CountyQueryService } from "./CountyQueryService";
 import { densificarRuta } from "./densificarRuta";
+import { crearPopulationCalculator } from "./poblacionGeometryServer";
 import { crearRecorrido, posicionEn, subRecorrido, ubicarParadas, type Recorrido } from "./Recorrido";
 import { SimulationEngine, type LecturaGps } from "./SimulationEngine";
 import { SpeedProfile } from "./SpeedProfile";
@@ -24,6 +34,38 @@ let preparado: { recorrido: Recorrido; paradasKm: number[] } | null = null;
 let version = 0;
 let ultimoKm = 0;
 let idCambio = 0;
+
+const bufferService = new BufferService(SERVICIOS.geometryServer);
+const countyService = new CountyQueryService(SERVICIOS.condados);
+const populationCalculator = crearPopulationCalculator(SERVICIOS.geometryServer);
+
+const pipeline = new AnalysisPipeline(
+  {
+    buffer: (punto, radioKm, signal) => bufferService.generar(punto, radioKm, signal),
+    condados: (buffer, signal) => countyService.interceptados(buffer, signal),
+    poblacion: (buffer, condados, signal) => populationCalculator.calcular(buffer, condados, signal),
+  },
+  {
+    buffer: (buffer) => dibujarBuffer(buffer),
+    resultado({ solicitud, condados, poblacion, tiempos }) {
+      dibujarCondados(condados, poblacion.condados);
+      useSimulacionStore.setState({
+        analisis: { km: solicitud.km, radioKm: solicitud.radioKm, poblacion, tiempos },
+        avisoAnalisis: null,
+      });
+    },
+    error(error) {
+      console.warn("Falló el análisis espacial:", error);
+      useSimulacionStore.setState({ avisoAnalisis: "No se pudo completar el análisis del buffer; se reintenta en el próximo tick." });
+    },
+    metricas: (metricasAnalisis) => useSimulacionStore.setState({ metricasAnalisis }),
+  },
+);
+
+function analizar(km: number): void {
+  if (!preparado) return;
+  pipeline.solicitar({ punto: posicionEn(preparado.recorrido, km), radioKm: useSimulacionStore.getState().radioBufferKm, km });
+}
 
 function crearTracker(recorrido: Recorrido): StateTracker {
   return new StateTracker((km) => posicionEn(recorrido, km), consultarEstadoEnPunto, {
@@ -44,10 +86,13 @@ function crearTracker(recorrido: Recorrido): StateTracker {
 
 function reiniciarRecorrido(): void {
   tracker?.reset();
+  pipeline.invalidar();
   limpiarRecorrido();
   ultimoKm = 0;
   useSimulacionStore.setState(ESTADO_RECORRIDO_INICIAL);
+  pipeline.reiniciarMetricas();
   void tracker?.actualizar(0);
+  analizar(0);
 }
 
 function manejarLectura(lectura: LecturaGps): void {
@@ -58,6 +103,7 @@ function manejarLectura(lectura: LecturaGps): void {
   dibujarAvance(subRecorrido(preparado.recorrido, ultimoKm, lectura.distanciaKm), lectura.velocidadKmh);
   ultimoKm = lectura.distanciaKm;
   void tracker?.actualizar(lectura.distanciaKm);
+  analizar(lectura.distanciaKm);
 }
 
 function crearMotor(): void {
@@ -77,6 +123,7 @@ async function prepararRuta(ruta: RutaGuardada | null): Promise<void> {
   const actual = ++version;
   motor?.destruir();
   tracker?.reset();
+  pipeline.invalidar();
   motor = null;
   tracker = null;
   preparado = null;
@@ -89,12 +136,16 @@ async function prepararRuta(ruta: RutaGuardada | null): Promise<void> {
     const puntos = await densificarRuta(ruta.geometria);
     if (actual !== version) return;
 
+    if (puntos.length < 2) {
+      useSimulacionStore.setState({ error: "La ruta no tiene tramos para recorrer. Volvé a calcularla en la pestaña Rutas." });
+      return;
+    }
     const recorrido = crearRecorrido(puntos);
     preparado = { recorrido, paradasKm: ubicarParadas(recorrido, ruta.paradas) };
     crearMotor();
   } catch (error) {
     console.error("No se pudo preparar la simulación:", error);
-    if (actual === version) useSimulacionStore.setState({ error: "No se pudo preparar la ruta para simular." });
+    if (actual === version) useSimulacionStore.setState({ error: "No se pudo preparar la ruta para simular. Revisá la conexión y reintentá." });
   } finally {
     if (actual === version) useSimulacionStore.setState({ preparando: false });
   }
@@ -110,12 +161,16 @@ export function iniciarSimulacion(): () => void {
     version++;
     motor?.destruir();
     tracker?.reset();
+    pipeline.invalidar();
     motor = null;
     tracker = null;
   };
 }
 
 export const controles = {
+  reintentar: () => prepararRuta(useAppStore.getState().rutaActiva),
+  resaltarCondado,
+  enfocarCondado,
   play: () => motor?.play(),
   pausa: () => motor?.pausa(),
   reset() {
@@ -129,6 +184,14 @@ export const controles = {
   setIntervaloMs(ms: number) {
     useSimulacionStore.setState({ intervaloMs: ms });
     motor?.setIntervaloMs(ms);
+  },
+  // el análisis en vuelo usa el radio viejo, así que se descarta y se rehace en la posición actual
+  setRadioBufferKm(radioKm: number) {
+    useSimulacionStore.setState({ radioBufferKm: radioKm });
+    pipeline.invalidar();
+    limpiarAnalisis();
+    useSimulacionStore.setState({ analisis: null });
+    analizar(ultimoKm);
   },
   // otra semilla es otro perfil de velocidad, así que la simulación arranca de cero
   setSemilla(semilla: number) {

@@ -1,5 +1,6 @@
 import "@esri/calcite-components/components/calcite-alert";
 import { useSimulacionStore } from "../simulacionStore";
+import { formatoKm } from "./formato";
 
 // se monta en el slot "alerts" del shell para que se vea aunque la pestaña de simulación esté oculta
 export function AvisoCambioEstado() {
@@ -20,7 +21,7 @@ export function AvisoCambioEstado() {
     >
       <div slot="title">Entró a {cambio.a.nombre}</div>
       <div slot="message">
-        Desde {cambio.de.nombre}, en el km {cambio.km.toFixed(1)}
+        Desde {cambio.de.nombre}, a los {formatoKm(cambio.km)} del recorrido
       </div>
     </calcite-alert>
   );

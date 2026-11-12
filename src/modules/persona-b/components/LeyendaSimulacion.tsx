@@ -1,11 +1,12 @@
 import { useAppStore } from "../../../shared/store";
 import { useSimulacionStore } from "../simulacionStore";
-import { CLASES_VELOCIDAD, COLOR_RUTA, PALETA_ESTADOS, colorEstado } from "../symbology/SymbologyFactory";
+import { CLASES_VELOCIDAD, COLOR_BUFFER, COLOR_CONDADO, COLOR_RUTA, PALETA_ESTADOS, colorEstado } from "../symbology/SymbologyFactory";
 import "./LeyendaSimulacion.css";
 
 export function LeyendaSimulacion() {
   const rutaActiva = useAppStore((s) => s.rutaActiva);
   const tramos = useSimulacionStore((s) => s.tramosEstado);
+  const radioKm = useSimulacionStore((s) => s.radioBufferKm);
   if (!rutaActiva) return null;
 
   return (
@@ -40,6 +41,18 @@ export function LeyendaSimulacion() {
         <li>
           <span className="muestra-rombo" style={{ background: colorEstado(1) }} />
           Cruce de frontera
+        </li>
+      </ul>
+
+      <h3>Análisis</h3>
+      <ul>
+        <li>
+          <span className="muestra-area muestra-area--punteada" style={{ borderColor: COLOR_BUFFER, background: "rgba(0, 151, 167, 0.18)" }} />
+          Buffer de {radioKm} km
+        </li>
+        <li>
+          <span className="muestra-area" style={{ borderColor: COLOR_CONDADO, background: "rgba(216, 27, 96, 0.1)" }} />
+          Condado interceptado
         </li>
       </ul>
 

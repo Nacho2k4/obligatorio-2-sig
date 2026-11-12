@@ -72,3 +72,15 @@
   background: #282828;
   outline: 2px solid white;
 }
+
+.leyenda-sim .muestra-area {
+  width: 18px;
+  height: 12px;
+  border: 2px solid;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.leyenda-sim .muestra-area--punteada {
+  border-style: dashed;
+}
