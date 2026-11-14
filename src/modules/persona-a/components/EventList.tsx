@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { EventoParada, RutaGuardada } from '../../../contracts/contracts';
 import { calcularRuta, type RutaCalculada } from '../services/routingService';
 import { exportarRutaArchivo } from '../services/routeFileService';
-import { guardarRuta } from '../repositories/routeRepository';
+import { routeRepository } from '../repositories/repositorios';
 
 const MAPA_TIPOS_EVENTO: Record<number, string> = {
   0: 'Art Festival', 1: 'Farmers Market', 2: 'Movie Night',
@@ -18,7 +18,7 @@ interface EventListProps {
   paradaSeleccionada?: number | null; 
   onCentrarEnParada?: (parada: EventoParada) => void;
   onImprimirMapa?: () => Promise<void>;
-  onRutaGuardada?: () => void;
+  onRutaGuardada?: (ruta: RutaGuardada) => void;
 }
 
 export const EventList = ({ 
@@ -34,10 +34,14 @@ export const EventList = ({
 }: EventListProps) => {
   const [nombreRuta, setNombreRuta] = useState('Mi Ruta de Eventos');
   const [isPrinting, setIsPrinting] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [calculando, setCalculando] = useState(false);
 
   const handleCalcularRuta = async () => {
     if (paradas.length < 2) return;
+    setCalculando(true);
     const resultado = await calcularRuta(paradas);
+    setCalculando(false);
     if (resultado) {
       console.log("✅ Ruta final generada:", resultado);
       onRutaCalculada(resultado);
@@ -52,12 +56,20 @@ export const EventList = ({
     creada: new Date().toISOString()
   });
 
-  const handleGuardarRuta = () => {
+  // la ruta se guarda en el featureserver de trails; las paradas que no estén en events se crean antes
+  const handleGuardarRuta = async () => {
     if (!rutaCalculada || !nombreRuta.trim()) return alert("Ingresa un nombre válido.");
-    
-    guardarRuta(construirRuta(rutaCalculada.geometry));
-    if (onRutaGuardada) onRutaGuardada();
-    alert("¡Ruta guardada correctamente!");
+
+    setGuardando(true);
+    try {
+      const guardada = await routeRepository.guardarRuta(construirRuta(rutaCalculada.geometry));
+      if (onRutaGuardada) onRutaGuardada(guardada);
+      alert("¡Ruta guardada correctamente en el servidor!");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "No se pudo guardar la ruta en el servidor.");
+    } finally {
+      setGuardando(false);
+    }
   };
 
   const handleExportarArchivo = () => {
@@ -146,6 +158,7 @@ export const EventList = ({
 
                   <button 
                     onClick={() => onEliminarParada(parada.eventId)}
+                    title="Quitar de la ruta (el evento sigue en el servidor)"
                     style={{ 
                       width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       backgroundColor: '#ff4d4f', color: 'white', border: 'none', borderRadius: '6px', 
@@ -162,10 +175,10 @@ export const EventList = ({
       )}
 
       <button 
-        onClick={handleCalcularRuta} disabled={paradas.length < 2}
-        style={{ padding: '10px', backgroundColor: paradas.length < 2 ? '#ccc' : '#1890ff', color: 'white', border: 'none', borderRadius: '4px', cursor: paradas.length < 2 ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
+        onClick={handleCalcularRuta} disabled={paradas.length < 2 || calculando}
+        style={{ padding: '10px', backgroundColor: paradas.length < 2 || calculando ? '#ccc' : '#1890ff', color: 'white', border: 'none', borderRadius: '4px', cursor: paradas.length < 2 || calculando ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
       >
-        Calcular Ruta Múltiple
+        {calculando ? 'Calculando...' : 'Calcular Ruta Múltiple'}
       </button>
 
       {rutaCalculada && (
@@ -175,10 +188,11 @@ export const EventList = ({
           
           <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
             <button 
-              onClick={handleGuardarRuta} 
-              style={{ flex: 1, padding: '8px', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+              onClick={() => void handleGuardarRuta()} 
+              disabled={guardando}
+              style={{ flex: 1, padding: '8px', backgroundColor: guardando ? '#ccc' : '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: guardando ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
             >
-              Guardar
+              {guardando ? 'Guardando...' : 'Guardar'}
             </button>
             <button 
               onClick={handleImprimir} 

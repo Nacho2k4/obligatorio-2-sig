@@ -1,0 +1,145 @@
+.sim-panel calcite-block {
+  margin: 0;
+}
+
+.sim-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sim-controles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.sim-config {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.sim-config-nota {
+  grid-column: 1 / -1;
+  font-size: 0.75rem;
+}
+
+.sim-datos {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.sim-datos dt {
+  color: var(--calcite-color-text-3);
+}
+
+.sim-datos dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.sim-datos .sim-detalle {
+  margin-top: -0.25rem;
+  font-size: 0.75rem;
+  color: var(--calcite-color-text-3);
+}
+
+.sim-punto-color {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  vertical-align: baseline;
+}
+
+.sim-retraso {
+  color: var(--calcite-color-text-3);
+}
+
+.sim-poblacion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.sim-poblacion-valor {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--calcite-color-text-1);
+}
+
+.sim-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.sim-tabla caption {
+  caption-side: bottom;
+  padding-top: 0.4rem;
+  font-size: 0.7rem;
+  text-align: left;
+}
+
+.sim-tabla th,
+.sim-tabla td {
+  padding: 0.3rem 0.25rem;
+  border-bottom: 1px solid var(--calcite-color-border-3);
+  text-align: right;
+  font-weight: 400;
+}
+
+.sim-tabla th:first-child {
+  text-align: left;
+}
+
+.sim-tabla thead th {
+  color: var(--calcite-color-text-3);
+  font-weight: 500;
+}
+
+.sim-tabla tbody tr {
+  cursor: pointer;
+}
+
+.sim-tabla tbody tr:hover,
+.sim-tabla tbody tr:focus-visible {
+  background: var(--calcite-color-foreground-2);
+  outline: none;
+}
+
+.sim-tabla tbody th .texto-secundario {
+  display: block;
+  font-size: 0.7rem;
+}
+
+/* barra detrás del porcentaje para comparar condados de un vistazo */
+.sim-tabla tbody td:nth-child(3) {
+  position: relative;
+}
+
+.sim-barra {
+  position: absolute;
+  right: 0.25rem;
+  bottom: 0.15rem;
+  max-width: calc(100% - 0.5rem);
+  height: 3px;
+  border-radius: 2px;
+  background: #d81b60;
+  opacity: 0.6;
+}
+
+.sim-tabla tfoot th,
+.sim-tabla tfoot td {
+  border-bottom: none;
+  font-weight: 700;
+}

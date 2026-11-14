@@ -1,0 +1,17 @@
+.mapa-contenedor {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.mapa-contenedor > arcgis-map,
+.mapa-contenedor > arcgis-scene {
+  position: absolute;
+  inset: 0;
+}
+
+/* la vista oculta conserva su tamaño (no display: none) para que la 2d pueda imprimir mientras se ve la 3d */
+.mapa-contenedor > .vista-oculta {
+  visibility: hidden;
+  pointer-events: none;
+}

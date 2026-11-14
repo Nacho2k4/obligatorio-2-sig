@@ -1,0 +1,86 @@
+.leyenda-sim {
+  background: var(--calcite-color-foreground-1);
+  border: 1px solid var(--calcite-color-border-3);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.75rem;
+  max-width: 230px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.leyenda-sim h3 {
+  margin: 0.4rem 0 0.1rem;
+  font-size: 0.8rem;
+}
+
+.leyenda-sim h3:first-child {
+  margin-top: 0;
+}
+
+.leyenda-sim p {
+  margin: 0 0 0.3rem;
+  color: var(--calcite-color-text-3);
+}
+
+.leyenda-sim ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.leyenda-sim li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.leyenda-sim .muestra-linea,
+.leyenda-sim .muestra-franja {
+  display: inline-block;
+  width: 26px;
+  border-radius: 2px;
+}
+
+.leyenda-sim .muestra-linea {
+  height: 4px;
+}
+
+.leyenda-sim .muestra-franja {
+  height: 10px;
+  opacity: 0.85;
+}
+
+.leyenda-sim .muestra-rombo {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0 8px;
+  transform: rotate(45deg);
+  outline: 2px solid white;
+}
+
+.leyenda-sim .muestra-punto {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin: 0 8px;
+  border-radius: 50%;
+  background: #282828;
+  outline: 2px solid white;
+}
+
+.leyenda-sim .muestra-area {
+  width: 18px;
+  height: 12px;
+  border: 2px solid;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.leyenda-sim .muestra-area--punteada {
+  border-style: dashed;
+}

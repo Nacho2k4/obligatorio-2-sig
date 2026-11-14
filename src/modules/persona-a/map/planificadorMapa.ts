@@ -8,7 +8,7 @@ import TextSymbol from '@arcgis/core/symbols/TextSymbol';
 import type { GraphicHit } from '@arcgis/core/views/types';
 import type { EventoParada } from '../../../contracts/contracts';
 import { capas } from '../../../shared/map/capas';
-import { obtenerVista, type Vista } from '../../../shared/map/vista';
+import { obtenerVista, obtenerVista2D, type Vista } from '../../../shared/map/vista';
 import { exportarRutaPdf } from '../services/printService';
 
 const capa = capas.eventos;
@@ -96,8 +96,9 @@ export const escucharClicks = (view: Vista, onSeleccion: (eventId: number | null
   });
 
 export const imprimirRuta = async (titulo: string) => {
-  const view = obtenerVista();
-  if (!view || view.type !== '2d') return;
+  // siempre la vista 2d: si se está mostrando la 3d, la 2d sigue viva detrás y se imprime desde ahí
+  const view = obtenerVista2D();
+  if (!view) return;
 
   const viewpointPrevio = view.viewpoint.clone(); // para devolver al usuario donde estaba
 
